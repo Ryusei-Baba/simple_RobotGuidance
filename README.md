@@ -1,0 +1,2 @@
+# simple_RobotGuidance
+カメラベースで人追従をするロボットのためのROSパッケージです．
