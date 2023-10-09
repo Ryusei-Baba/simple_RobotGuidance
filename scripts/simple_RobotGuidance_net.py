@@ -20,8 +20,8 @@ from yaml import load
 
 
 # HYPER PARAM
-BATCH_SIZE = 8
-MAX_DATA = 10000
+BATCH_SIZE = 8  #トレーニング中にネットワークに一度に入力されるサンプルの数
+MAX_DATA = 10000    #データセット内の最大データ数を制限するためのパラメータ
 
 
 class Net(nn.Module):
@@ -44,7 +44,7 @@ class Net(nn.Module):
         #self.batch = nn.BatchNorm2d(0.2)
         self.flatten = nn.Flatten()
     # <CNN layer>
-        self.cnn_layer = nn.Sequential(
+        self.cnn_layer = nn.Sequential( #畳み込み層とReLU活性化関数を順番に適用するシーケンシャルな層
             self.conv1,
             self.relu,
             self.conv2,
@@ -55,7 +55,7 @@ class Net(nn.Module):
             self.flatten
         )
     # <FC layer (output)>
-        self.fc_layer = nn.Sequential(
+        self.fc_layer = nn.Sequential(  #全結合層とReLU活性化関数を順番に適用するシーケンシャルな層
             self.fc4,
             self.relu,
             self.fc5,
@@ -64,13 +64,13 @@ class Net(nn.Module):
 
     # <forward layer>
     def forward(self, x):
-        x1 = self.cnn_layer(x)
-        x2 = self.fc_layer(x1)
-        return x2
+        x1 = self.cnn_layer(x)  # CNNレイヤーにデータを入力し、特徴マップを生成
+        x2 = self.fc_layer(x1)  # 全結合レイヤーに特徴マップを入力し、最終的な出力を生成
+        return x2   # ネットワークの出力を返す
 
 
 class deep_learning:
-    def __init__(self, n_channel=3, n_action=1):
+    def __init__(self, n_channel=3, n_action=3):    #n_channel=3はカラー画像，n_actionは出力のアクション数
         # <tensor device choiece>
         self.device = torch.device(
             'cuda' if torch.cuda.is_available() else 'cpu')
