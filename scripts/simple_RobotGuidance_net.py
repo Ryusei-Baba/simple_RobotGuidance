@@ -76,24 +76,28 @@ class deep_learning:
             'cuda' if torch.cuda.is_available() else 'cpu')
         self.net = Net(n_channel, n_action)
         self.net.to(self.device)
-        print(self.device)
-        self.optimizer = optim.Adam(
+        print(self.device)  #'cuda'or'cpu'が出力される
+        self.optimizer = optim.Adam(    #モデルの重みを最適化するための最適化アルゴリズムを指定
             self.net.parameters(), eps=1e-2, weight_decay=5e-4)
         # self.optimizer.setup(self.net.parameters())
-        self.totensor = transforms.ToTensor()
-        self.n_action = n_action
-        self.count = 0
-        self.accuracy = 0
-        self.results_train = {}
-        self.results_train['loss'], self.results_train['accuracy'] = [], []
-        self.loss_list = []
-        self.acc_list = []
-        self.datas = []
-        self.target_angles = []
-        self.criterion = nn.MSELoss()
+        self.totensor = transforms.ToTensor()   
+        #self.totensorとself.transformは、データをPyTorchのテンソルに変換するための変換（transform）関数
+        #transforms.ToTensor()は、NumPy配列やPIL画像をPyTorchテンソルに変換するための関数. データの前処理に使用
+        self.n_action = n_action    #アクションの数を示す変数
+        self.count = 0  #トレーニング回数やエポックのカウントを保持する変数
+        self.accuracy = 0   #モデルの精度を追跡するための変数
+        self.results_train = {} #トレーニングの結果を格納するための辞書
+        self.results_train['loss'], self.results_train['accuracy'] = [], [] #トレーニング中の損失と精度の履歴を追跡
+        self.loss_list = [] #トレーニング中に計算された損失と精度を記録するためのリスト
+        self.acc_list = []  #トレーニング中に計算された損失と精度を記録するためのリスト
+        self.datas = [] #トレーニングデータのイメージと対応する目標角度を格納するためのリスト
+        self.target_angles = [] #トレーニングデータのイメージと対応する目標角度を格納するためのリスト
+        self.criterion = nn.MSELoss()   #損失関数を定義するためのオブジェクト. このコードでは平均二乗誤差（MSELoss）を使用
         self.transform = transforms.Compose([transforms.ToTensor()])
-        self.first_flag = True
-        torch.backends.cudnn.benchmark = False
+        #self.totensorとself.transformは、データをPyTorchのテンソルに変換するための変換（transform）関数
+        #transforms.ToTensor()は、NumPy配列やPIL画像をPyTorchテンソルに変換するための関数. データの前処理に使用
+        self.first_flag = True  #フラグ変数で、トレーニングデータの最初のバッチを処理する際に使用
+        torch.backends.cudnn.benchmark = False  #GPUでの演算の最適化を制御するための設定. Falseに設定されている場合、最適化は無効になり、再現性が向上
         #self.writer = SummaryWriter(log_dir="/home/haru/nav_ws/src/nav_cloning/runs",comment="log_1")
 
     def act_and_trains(self, img, target_angle):
