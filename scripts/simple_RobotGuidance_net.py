@@ -103,23 +103,27 @@ class deep_learning:
     def act_and_trains(self, img, target_angle):
 
         # <training mode>
-        self.net.train()
+        self.net.train()    #モデルをトレーニングモードに設定
 
-        if self.first_flag:
-            self.x_cat = torch.tensor(
+        if self.first_flag: #最初のデータバッチを処理するかどうかを制御するフラグ．初めてデータバッチが処理される場合（self.first_flagがTrueの場合）、以下の操作が行われる
+            self.x_cat = torch.tensor(  #入力画像データimgをテンソルに変換して、self.device（GPUまたはCPU）に配置
                 img, dtype=torch.float32, device=self.device).unsqueeze(0)
-            self.x_cat = self.x_cat.permute(0, 3, 1, 2)
-            self.t_cat = torch.tensor(
+            self.x_cat = self.x_cat.permute(0, 3, 1, 2) #寸法の順番を変更し、チャンネルの次元を先頭に配置
+            self.t_cat = torch.tensor(  #ターゲット角度target_angleをテンソルに変換して、self.deviceに配置
                 [target_angle], dtype=torch.float32, device=self.device).unsqueeze(0)
-            self.first_flag = False
+            self.first_flag = False #Falseに設定され、以降のデータバッチではこれらの操作はスキップ
         # x= torch.tensor(self.transform(img),dtype=torch.float32, device=self.device).unsqueeze(0)
-        # <to tensor img(x),cmd(c),angle(t)>
-        x = torch.tensor(img, dtype=torch.float32,
+        
+        # <to tensor img(x),cmd(c),angle(t)>    #入力データをテンソルに変換するステップ
+        x = torch.tensor(img, dtype=torch.float32,  #imgというNumPy配列またはテンソルをPyTorchテンソルに変換する操作
                          device=self.device).unsqueeze(0)
+        
         # <(Batch,H,W,Channel) -> (Batch ,Channel, H,W)>
-        x = x.permute(0, 3, 1, 2)
-        t = torch.tensor([target_angle], dtype=torch.float32,
-                         device=self.device).unsqueeze(0)
+        x = x.permute(0, 3, 1, 2)   #テンソル x の次元の順序を変更する操作. 通常、PyTorchではチャンネル次元を先頭に配置することが一般的．この操作により、(Batch, H, W, Channel)の形状が(Batch, Channel, H, W)に変更される．これは、モデルが受け入れる形式にデータを整形するためのステップ
+        t = torch.tensor([target_angle], dtype=torch.float32,   #目標角度（target_angle）のテンソル表現
+                         device=self.device).unsqueeze(0)   #unsqueeze(0)により、バッチ次元を追加
+        #self.x_catとself.t_catは、トレーニングデータのバッチを保持するためのテンソル
+        #torch.catは、テンソルを結合するための操作で、この場合、既存のデータバッチ（self.x_catとself.t_cat）と新しいデータ（xとt）をバッチ次元（0次元目）で結合. これにより、トレーニングデータバッチが蓄積
         self.x_cat = torch.cat([self.x_cat, x], dim=0)
         self.t_cat = torch.cat([self.t_cat, t], dim=0)
 
@@ -127,30 +131,45 @@ class deep_learning:
 
         # <make dataset>
         #print("train x =",x.shape,x.device,"train c =" ,c.shape,c.device,"tarain t = " ,t.shape,t.device)
-        dataset = TensorDataset(self.x_cat, self.t_cat)
+        dataset = TensorDataset(self.x_cat, self.t_cat) #トレーニングデータバッチをPyTorchのデータセットに変換するステップ
+        #TensorDatasetは、PyTorchで使用できるデータセットの一種. ミニバッチを作成するのに便利
+        
         # <dataloder>
         train_dataset = DataLoader(
             dataset, batch_size=BATCH_SIZE, generator=torch.Generator('cpu'), shuffle=True)
-
+        #DataLoaderは、データセットからバッチを生成し、モデルに供給するための便利なユーティリティ
+        #datasetはトレーニングデータセットで、これをDataLoaderに渡す
+        #batch_sizeは、1つのミニバッチに含まれるデータポイントの数を指定します。この場合、BATCH_SIZEで指定された値（8）のデータポイントが1つのミニバッチに含まれます。
+        #generator=torch.Generator('cpu')は、データローダー内でシャッフルのために使用される乱数生成器を指定しています。'cpu'と指定することでCPU上で乱数生成が行われます。
+        #shuffle=Trueは、データをエポックごとにシャッフルするためのフラグです。これにより、トレーニングデータの順序がエポックごとに変更され、モデルのトレーニングが安定化されます。
+        
         # <only cpu>
         # train_dataset = DataLoader(dataset, batch_size=BATCH_SIZE,shuffle=True)
 
         # <split dataset and to device>
-        for x_train, t_train in train_dataset:
-            x_train.to(self.device, non_blocking=True)
-            t_train.to(self.device, non_blocking=True)
+        for x_train, t_train in train_dataset:  
+            #train_datasetからミニバッチごとにデータを取り出すためのループです。一度のループで1つのミニバッチが取り出されます。
+            #x_trainは入力データ（画像）のミニバッチを、t_trainは目標データ（目標角度）のミニバッチを表します。
+            x_train.to(self.device, non_blocking=True)  #x_trainのデータを計算デバイスに配置するための操作です。
+            t_train.to(self.device, non_blocking=True)  #t_trainのデータを計算デバイスに配置するための操作です。
+            #non_blocking=Trueは、非同期のデータ移動を有効にするためのオプションです。このオプションを使用することで、データの転送中に他の演算を実行できる場合、効率的なトレーニングが行えます。
             break
 
         # <learning>
         # print(t_train)
         self.optimizer.zero_grad()
         # self.net.zero_grad()
+        #self.optimizer.zero_grad()は、勾配をゼロにリセットするための操作です。モデルのパラメータに関する勾配情報は、前回の勾配計算の結果が残っているため、新しいミニバッチに対して勾配を計算する前にゼロにリセットします。これは、勾配の累積を防ぐための重要なステップです。
         y_train = self.net(x_train)
         # print(y_train,t_train)
+        #y_trainは、モデルに入力データ x_train を与えて得られた出力です。モデルは順伝播（forward pass）を実行し、入力から予測結果を計算します。
         loss = self.criterion(y_train, t_train)
+        #lossは、予測値 y_train と目標データ t_train の間の損失（誤差）を計算するための操作です。このコードでは、平均二乗誤差（MSELoss）が使用されています。損失関数は、モデルの出力が目標にどれだけ近いかを評価し、その差を数値化します。
         loss.backward()
+        #loss.backward()は、逆伝播（backward pass）を実行し、損失関数をモデルのパラメータに関して微分します。これにより、各パラメータに対する勾配が計算されます。
         # self.optimizer.zero_grad
         self.optimizer.step()
+        #self.optimizer.step()は、オプティマイザを使用してモデルのパラメータを更新するための操作です。勾配降下法などの最適化アルゴリズムを使用して、モデルの重みを更新し、損失を最小化しようとします。
         # self.writer.add_scalar("loss",loss,self.count)
 
         # <test>
