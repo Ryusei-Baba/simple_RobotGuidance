@@ -3,12 +3,12 @@ from __future__ import print_function
 
 from numpy import dtype
 import roslib
-roslib.load_manifest('nav_cloning')
+roslib.load_manifest('simple_RobotGuidance')
 import rospy
 import cv2
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge, CvBridgeError
-from nav_cloning_net import *
+from simple_RobotGuidance_net import *
 from skimage.transform import resize
 from geometry_msgs.msg import Twist
 from geometry_msgs.msg import PoseArray
@@ -27,16 +27,16 @@ import sys
 import tf
 from nav_msgs.msg import Odometry
 
-class nav_cloning_node:
+class simple_RobotGuidance_node:
     def __init__(self):
-        rospy.init_node('nav_cloning_node', anonymous=True)
-        self.mode = rospy.get_param("/nav_cloning_node/mode", "use_dl_output")
+        rospy.init_node('simple_RobotGuidance_node', anonymous=True)
+        self.mode = rospy.get_param("/simple_RobotGuidance_node/mode", "use_dl_output")
         self.action_num = 1
         self.dl = deep_learning(n_action = self.action_num)
         self.bridge = CvBridge()
         self.image_sub = rospy.Subscriber("/camera/rgb/image_raw", Image, self.callback)
-        self.image_left_sub = rospy.Subscriber("/camera_left/rgb/image_raw", Image, self.callback_left_camera)
-        self.image_right_sub = rospy.Subscriber("/camera_right/rgb/image_raw", Image, self.callback_right_camera)
+        # self.image_left_sub = rospy.Subscriber("/camera_left/rgb/image_raw", Image, self.callback_left_camera)
+        # self.image_right_sub = rospy.Subscriber("/camera_right/rgb/image_raw", Image, self.callback_right_camera)
         self.vel_sub = rospy.Subscriber("/nav_vel", Twist, self.callback_vel)
         self.action_pub = rospy.Publisher("action", Int8, queue_size=1)
         self.nav_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
@@ -50,13 +50,13 @@ class nav_cloning_node:
         self.vel = Twist()
         self.path_pose = PoseArray()
         self.cv_image = np.zeros((480,640,3), np.uint8)
-        self.cv_left_image = np.zeros((480,640,3), np.uint8)
-        self.cv_right_image = np.zeros((480,640,3), np.uint8)
+        # self.cv_left_image = np.zeros((480,640,3), np.uint8)
+        # self.cv_right_image = np.zeros((480,640,3), np.uint8)
         self.learning = True
         self.select_dl = False
         self.start_time = time.strftime("%Y%m%d_%H:%M:%S")
-        self.path = roslib.packages.get_pkg_dir('nav_cloning') + '/data/result_with_dir_'+str(self.mode)+'/'
-        self.save_path = roslib.packages.get_pkg_dir('nav_cloning') + '/data/model_with_dir_'+str(self.mode)+'/'
+        self.path = roslib.packages.get_pkg_dir('simple_RobotGuidance') + '/data/result_with_dir_'+str(self.mode)+'/'
+        self.save_path = roslib.packages.get_pkg_dir('simple_RobotGuidance') + '/data/model_with_dir_'+str(self.mode)+'/'
         self.previous_reset_time = 0
         self.pos_x = 0.0
         self.pos_y = 0.0
