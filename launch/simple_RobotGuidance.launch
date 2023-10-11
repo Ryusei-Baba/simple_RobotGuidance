@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
 <launch>
-    <arg name="script" default="nav_cloning_node.py"/>
-    <node pkg="nav_cloning" type="$(arg script)" name="nav_cloning_node" output="screen"/>
+    <arg name="script" default="simple_RobotGuidance_node.py"/>
+    <node pkg="simple_RobotGuidance" type="$(arg script)" name="simple_RobotGuidance_node" output="screen"/>
 </launch>
