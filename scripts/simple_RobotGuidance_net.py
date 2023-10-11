@@ -173,8 +173,8 @@ class deep_learning:
         # self.writer.add_scalar("loss",loss,self.count)
 
         # <test>
-        self.net.eval()
-        action_value_training = self.net(x)
+        self.net.eval() #モデルを評価モードに設定. モデルがデータを順伝播するだけで、重みの更新は行われません。
+        action_value_training = self.net(x) #モデルにテスト用の入力データ x を与えて得られた出力です。モデルはテストデータに対して順伝播を実行し、入力から予測結果を計算します。
         # self.writer.add_scalar("angle",abs(action_value_training[0][0].item()-target_angle),self.count)
         # print("action=" ,action_value_training[0][0].item() ,"loss=" ,loss.item())
         # print("action=" ,action_value_training.item() ,"loss=" ,loss.item())
@@ -184,9 +184,10 @@ class deep_learning:
         # self.writer.close()
         # self.writer.flush()
         # <reset dataset>
-        if self.x_cat.size()[0] > MAX_DATA:
+        if self.x_cat.size()[0] > MAX_DATA: #現在のトレーニングデータのバッチ数を示します。この値がMAX_DATAを超えた場合、古いデータを削除する処理が実行されます。
             self.x_cat = self.x_cat[1:]
             self.t_cat = self.t_cat[1:]
+            #self.x_cat[1:]およびself.t_cat[1:]は、テンソルのスライシングを使用して、最も古いデータポイントを削除しています。この操作により、トレーニングデータのサイズが制御されます。
             # self.x_cat = torch.empty(1, 3, 48, 64).to(self.device)
             # self.t_cat = torch.empty(1, 1).to(self.device)
             # self.first_flag = True
@@ -204,10 +205,10 @@ class deep_learning:
         x_test_ten = x_test_ten.permute(0, 3, 1, 2)
         # print(x_test_ten.shape,x_test_ten.device,c_test.shape,c_test.device)
         # <test phase>
-        action_value_test = self.net(x_test_ten)
+        action_value_test = self.net(x_test_ten)    #action_value_testは、モデルに新しい入力データ x_test_ten を与えて得られた出力です。モデルはテストデータに対して順伝播を実行し、予測結果を計算します。
 
         print("act = ", action_value_test.item())
-        return action_value_test.item()
+        return action_value_test.item() #最終的に、予測された行動値が返されます。
 
     def result(self):
         accuracy = self.accuracy
@@ -216,12 +217,14 @@ class deep_learning:
     def save(self, save_path):
         # <model save>
         path = save_path + time.strftime("%Y%m%d_%H:%M:%S")
-        os.makedirs(path)
-        torch.save(self.net.state_dict(), path + '/model_gpu.pt')
+        #save_path は、モデルを保存するディレクトリのパスを指定します。このディレクトリにモデルの状態ファイルが保存されます。
+        #time.strftime("%Y%m%d_%H:%M:%S") は、現在の日時をフォーマット化した文字列を生成します。この文字列は、モデルの保存ディレクトリの一部として使用されます。
+        os.makedirs(path)   #指定されたディレクトリパス (path) を作成します。モデルの保存ディレクトリが存在しない場合に作成します。
+        torch.save(self.net.state_dict(), path + '/model_gpu.pt')   #モデルの状態をファイルに保存
 
     def load(self, load_path):
         # <model load>
-        self.net.load_state_dict(torch.load(load_path))
+        self.net.load_state_dict(torch.load(load_path)) #指定されたパスからモデルの状態を読み込み、self.net にロードする操作です。モデルの状態は torch.load を使用してファイルから復元されます。
 
 
 if __name__ == '__main__':
