@@ -31,13 +31,13 @@ class simple_RobotGuidance_node:
     def __init__(self):
         rospy.init_node('simple_RobotGuidance_node', anonymous=True)
         self.mode = rospy.get_param("/simple_RobotGuidance_node/mode", "use_dl_output")
-        self.action_num = 1
+        self.action_num = 3
         self.dl = deep_learning(n_action = self.action_num)
         self.bridge = CvBridge()
         self.image_sub = rospy.Subscriber("/camera/rgb/image_raw", Image, self.callback)
         # self.image_left_sub = rospy.Subscriber("/camera_left/rgb/image_raw", Image, self.callback_left_camera)
         # self.image_right_sub = rospy.Subscriber("/camera_right/rgb/image_raw", Image, self.callback_right_camera)
-        self.vel_sub = rospy.Subscriber("/nav_vel", Twist, self.callback_vel)
+        self.vel_sub = rospy.Subscriber("/joy_vel", Twist, self.callback_vel)
         self.action_pub = rospy.Publisher("action", Int8, queue_size=1)
         self.nav_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
         self.srv = rospy.Service('/training', SetBool, self.callback_dl_training)
@@ -71,7 +71,7 @@ class simple_RobotGuidance_node:
             writer.writerow(['step', 'mode', 'loss', 'angle_error(rad)', 'distance(m)','x(m)','y(m)', 'the(rad)', 'direction'])
         self.tracker_sub = rospy.Subscriber("/tracker", Odometry, self.callback_tracker)
 
-    def callback(self, data):
+    def callback(self, data):   #画像データを取得
         try:
             self.cv_image = self.bridge.imgmsg_to_cv2(data, "bgr8")
         except CvBridgeError as e:
