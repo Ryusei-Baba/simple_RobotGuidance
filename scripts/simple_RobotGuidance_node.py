@@ -57,6 +57,7 @@ class simple_RobotGuidance_node:
         self.start_time = time.strftime("%Y%m%d_%H:%M:%S")
         self.path = roslib.packages.get_pkg_dir('simple_RobotGuidance') + '/data/result_with_dir_'+str(self.mode)+'/'
         self.save_path = roslib.packages.get_pkg_dir('simple_RobotGuidance') + '/data/model_with_dir_'+str(self.mode)+'/'
+        # self.load_path = roslib.packages.get_pkg_dir('nav_cloning') + '/data/model_with_dir_'+str(self.mode)+'/20221129_17_47_35_10000/model.net'
         self.previous_reset_time = 0
         self.pos_x = 0.0
         self.pos_y = 0.0
@@ -76,17 +77,17 @@ class simple_RobotGuidance_node:
         except CvBridgeError as e:
             print(e)
 
-    def callback_left_camera(self, data):
-        try:
-            self.cv_left_image = self.bridge.imgmsg_to_cv2(data, "bgr8")
-        except CvBridgeError as e:
-            print(e)
+    # def callback_left_camera(self, data):
+    #     try:
+    #         self.cv_left_image = self.bridge.imgmsg_to_cv2(data, "bgr8")
+    #     except CvBridgeError as e:
+    #         print(e)
 
-    def callback_right_camera(self, data):
-        try:
-            self.cv_right_image = self.bridge.imgmsg_to_cv2(data, "bgr8")
-        except CvBridgeError as e:
-            print(e)
+    # def callback_right_camera(self, data):
+    #     try:
+    #         self.cv_right_image = self.bridge.imgmsg_to_cv2(data, "bgr8")
+    #     except CvBridgeError as e:
+    #         print(e)
 
     def callback_tracker(self, data):
         self.pos_x = data.pose.pose.position.x
@@ -131,10 +132,10 @@ class simple_RobotGuidance_node:
     def loop(self):
         if self.cv_image.size != 640 * 480 * 3:
             return
-        if self.cv_left_image.size != 640 * 480 * 3:
-            return
-        if self.cv_right_image.size != 640 * 480 * 3:
-            return
+        # if self.cv_left_image.size != 640 * 480 * 3:
+        #     return
+        # if self.cv_right_image.size != 640 * 480 * 3:
+        #     return
         if self.vel.linear.x != 0:
             self.is_started = True
         if self.is_started == False:
@@ -144,21 +145,32 @@ class simple_RobotGuidance_node:
         # r, g, b = cv2.split(img)
         # img = np.asanyarray([r,g,b])
 
-        img_left = resize(self.cv_left_image, (48, 64), mode='constant')
-        #r, g, b = cv2.split(img_left)
-        #img_left = np.asanyarray([r,g,b])
+        # img_left = resize(self.cv_left_image, (48, 64), mode='constant')
+        # #r, g, b = cv2.split(img_left)
+        # #img_left = np.asanyarray([r,g,b])
 
-        img_right = resize(self.cv_right_image, (48, 64), mode='constant')
-        #r, g, b = cv2.split(img_right)
-        #img_right = np.asanyarray([r,g,b])
+        # img_right = resize(self.cv_right_image, (48, 64), mode='constant')
+        # #r, g, b = cv2.split(img_right)
+        # #img_right = np.asanyarray([r,g,b])
         ros_time = str(rospy.Time.now())
 
-        if self.episode == 60000:
+        
+        # if self.episode == 0:
+        #     self.learning = False
+        #     self.dl.load(self.load_path)
+        #     # self.dl.save(self.save_path)
+        #     self.vel.linear.x = 0.0
+        #     self.vel.angular.z = 0.0
+        #     self.nav_pub.publish(self.vel)            
+        #     self.episode += 1
+        # return
+ 
+        if self.episode == 2000:
             self.learning = False
             self.dl.save(self.save_path)
             #self.dl.load(self.load_path)
 
-        if self.episode == 70000:
+        if self.episode == 10000:
             os.system('killall roslaunch')
             sys.exit()
 
@@ -174,16 +186,16 @@ class simple_RobotGuidance_node:
                 if self.select_dl and self.episode >= 0:
                     target_action = 0
                 action, loss = self.dl.act_and_trains(img , target_action)
-                if abs(target_action) < 0.1:
-                    action_left,  loss_left  = self.dl.act_and_trains(img_left , target_action - 0.2)
-                    action_right, loss_right = self.dl.act_and_trains(img_right , target_action + 0.2)
+                # if abs(target_action) < 0.1:
+                #     action_left,  loss_left  = self.dl.act_and_trains(img_left , target_action - 0.2)
+                #     action_right, loss_right = self.dl.act_and_trains(img_right , target_action + 0.2)
                 angle_error = abs(action - target_action)
 
             elif self.mode == "zigzag":
                 action, loss = self.dl.act_and_trains(img , target_action)
-                if abs(target_action) < 0.1:
-                    action_left,  loss_left  = self.dl.act_and_trains(img_left , target_action - 0.2)
-                    action_right, loss_right = self.dl.act_and_trains(img_right , target_action + 0.2)
+                # if abs(target_action) < 0.1:
+                #     action_left,  loss_left  = self.dl.act_and_trains(img_left , target_action - 0.2)
+                #     action_right, loss_right = self.dl.act_and_trains(img_right , target_action + 0.2)
                 angle_error = abs(action - target_action)
                 if distance > 0.1:
                     self.select_dl = False
@@ -194,9 +206,9 @@ class simple_RobotGuidance_node:
 
             elif self.mode == "use_dl_output":
                 action, loss = self.dl.act_and_trains(img , target_action)
-                if abs(target_action) < 0.1:
-                    action_left,  loss_left  = self.dl.act_and_trains(img_left , target_action - 0.2)
-                    action_right, loss_right = self.dl.act_and_trains(img_right , target_action + 0.2)
+                # if abs(target_action) < 0.1:
+                #     action_left,  loss_left  = self.dl.act_and_trains(img_left , target_action - 0.2)
+                #     action_right, loss_right = self.dl.act_and_trains(img_right , target_action + 0.2)
                 angle_error = abs(action - target_action)
                 if distance > 0.1:
                     self.select_dl = False
@@ -207,9 +219,9 @@ class simple_RobotGuidance_node:
 
             elif self.mode == "follow_line":
                 action, loss = self.dl.act_and_trains(img , target_action)
-                if abs(target_action) < 0.1:
-                    action_left,  loss_left  = self.dl.act_and_trains(img_left , target_action - 0.2)
-                    action_right, loss_right = self.dl.act_and_trains(img_right , target_action + 0.2)
+                # if abs(target_action) < 0.1:
+                #     action_left,  loss_left  = self.dl.act_and_trains(img_left , target_action - 0.2)
+                #     action_right, loss_right = self.dl.act_and_trains(img_right , target_action + 0.2)
                 angle_error = abs(action - target_action)
 
             elif self.mode == "selected_training":
@@ -218,9 +230,9 @@ class simple_RobotGuidance_node:
                 loss = 0
                 if angle_error > 0.05:
                     action, loss = self.dl.act_and_trains(img , target_action)
-                    if abs(target_action) < 0.1:
-                        action_left,  loss_left  = self.dl.act_and_trains(img_left , target_action - 0.2)
-                        action_right, loss_right = self.dl.act_and_trains(img_right , target_action + 0.2)
+                    # if abs(target_action) < 0.1:
+                    #     action_left,  loss_left  = self.dl.act_and_trains(img_left , target_action - 0.2)
+                    #     action_right, loss_right = self.dl.act_and_trains(img_right , target_action + 0.2)
                 
                 # if distance > 0.15 or angle_error > 0.3:
                 #     self.select_dl = False
@@ -244,7 +256,7 @@ class simple_RobotGuidance_node:
             self.nav_pub.publish(self.vel)
 
         else:
-            target_action = self.dl.act(img )
+            target_action = self.dl.act(img)
             distance = self.min_distance
             print(str(self.episode) + ", test, angular:" + str(target_action) + ", distance: " + str(distance))
 
@@ -260,14 +272,14 @@ class simple_RobotGuidance_node:
 
         temp = copy.deepcopy(img)
         cv2.imshow("Resized Image", temp)
-        temp = copy.deepcopy(img_left)
-        cv2.imshow("Resized Left Image", temp)
-        temp = copy.deepcopy(img_right)
-        cv2.imshow("Resized Right Image", temp)
+        # temp = copy.deepcopy(img_left)
+        # cv2.imshow("Resized Left Image", temp)
+        # temp = copy.deepcopy(img_right)
+        # cv2.imshow("Resized Right Image", temp)
         cv2.waitKey(1)
 
 if __name__ == '__main__':
-    rg = nav_cloning_node()
+    rg = simple_RobotGuidance_node()
     DURATION = 0.2
     r = rospy.Rate(1 / DURATION)
     while not rospy.is_shutdown():
