@@ -1,15 +1,15 @@
 <launch>
-  <!-- <group ns="camera_center"> -->
+  <group ns="camera_center">
     <node name="usb_cam" pkg="usb_cam" type="usb_cam_node" output="screen" >
-      <param name="video_device" value="/dev/video4" />
+    <param name="video_device" value="/dev/video4" />
       <param name="image_width" value="640" />
       <param name="image_height" value="480" />
       <param name="pixel_format" value="mjpeg" />
       <param name="camera_frame_id" value="usb_cam" />
-      <param name="frame_id" value="camera_center"/>
       <param name="io_method" value="mmap"/>
+      <param name="framerate" value="10"/>
     </node>
-  <!-- </group> -->
+  </group>
 
   <!-- <group ns="camera_left">
     <node name="usb_cam" pkg="usb_cam" type="usb_cam_node" output="screen" >
@@ -19,17 +19,19 @@
       <param name="pixel_format" value="mjpeg" />
       <param name="camera_frame_id" value="usb_cam" />
       <param name="io_method" value="mmap"/>
+      <param name="framerate" value="10"/>
     </node>
   </group>
 
   <group ns="camera_right">
     <node name="usb_cam" pkg="usb_cam" type="usb_cam_node" output="screen" >
-      <param name="video_device" value="/dev/video4" />
+      <param name="video_device" value="/dev/video8" />
       <param name="image_width" value="640" />
       <param name="image_height" value="480" />
       <param name="pixel_format" value="mjpeg" />
       <param name="camera_frame_id" value="usb_cam" />
       <param name="io_method" value="mmap"/>
+      <param name="framerate" value="10"/>
     </node>
   </group> -->
 

@@ -37,7 +37,7 @@ class simple_RobotGuidance_node:
         self.image_sub = rospy.Subscriber("/camera/rgb/image_raw", Image, self.callback)
         # self.image_left_sub = rospy.Subscriber("/camera_left/rgb/image_raw", Image, self.callback_left_camera)
         # self.image_right_sub = rospy.Subscriber("/camera_right/rgb/image_raw", Image, self.callback_right_camera)
-        self.vel_sub = rospy.Subscriber("/joy_vel", Twist, self.callback_vel)
+        self.vel_sub = rospy.Subscriber("/nav_vel", Twist, self.callback_vel)
         self.action_pub = rospy.Publisher("action", Int8, queue_size=1)
         self.nav_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
         self.srv = rospy.Service('/training', SetBool, self.callback_dl_training)
