@@ -70,7 +70,7 @@ class Net(nn.Module):
 
 
 class deep_learning:
-    def __init__(self, n_channel=3, n_action=3):    #n_channel=3はカラー画像，n_actionは出力のアクション数
+    def __init__(self, n_channel=3, n_action=1):    #n_channel=3はカラー画像，n_actionは出力のアクション数
         # <tensor device choiece>
         self.device = torch.device(
             'cuda' if torch.cuda.is_available() else 'cpu')
