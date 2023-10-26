@@ -37,7 +37,7 @@ class simple_RobotGuidance_node:
         self.image_sub = rospy.Subscriber("/camera/rgb/image_raw", Image, self.callback)
         # self.image_left_sub = rospy.Subscriber("/camera_left/rgb/image_raw", Image, self.callback_left_camera)
         # self.image_right_sub = rospy.Subscriber("/camera_right/rgb/image_raw", Image, self.callback_right_camera)
-        self.vel_sub = rospy.Subscriber("/nav_vel", Twist, self.callback_vel)
+        self.vel_sub = rospy.Subscriber("/cmd_vel", Twist, self.callback_vel)
         self.action_pub = rospy.Publisher("action", Int8, queue_size=1)
         self.nav_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
         self.srv = rospy.Service('/training', SetBool, self.callback_dl_training)
@@ -57,12 +57,12 @@ class simple_RobotGuidance_node:
         self.start_time = time.strftime("%Y%m%d_%H:%M:%S")
         self.path = roslib.packages.get_pkg_dir('simple_RobotGuidance') + '/data/result_with_dir_'+str(self.mode)+'/'
         self.save_path = roslib.packages.get_pkg_dir('simple_RobotGuidance') + '/data/model_with_dir_'+str(self.mode)+'/'
-        # self.load_path = roslib.packages.get_pkg_dir('nav_cloning') + '/data/model_with_dir_'+str(self.mode)+'/20221129_17_47_35_10000/model.net'
+        self.load_path = roslib.packages.get_pkg_dir('simple_RobotGuidance') + '/data/model_with_dir_'+str(self.mode)+'/20231026_21:18:49/model_gpu.pt'
         self.previous_reset_time = 0
         self.pos_x = 0.0
         self.pos_y = 0.0
         self.pos_the = 0.0
-        self.is_started = False
+        self.is_started = True
         self.start_time_s = rospy.get_time()
         os.makedirs(self.path + self.start_time)
 
@@ -165,7 +165,7 @@ class simple_RobotGuidance_node:
         #     self.episode += 1
         # return
  
-        if self.episode == 2000:
+        if self.episode == 1500:
             self.learning = False
             self.dl.save(self.save_path)
             #self.dl.load(self.load_path)
