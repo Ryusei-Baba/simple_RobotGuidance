@@ -9,7 +9,7 @@
 - git:
     uri: https://github.com/Ryusei-Baba/orne-box
     local-name: orne-box
-    version: TC_2023
+    version: simple_RobotGuidance
 - git:
     uri: https://github.com/ros-planning/navigation
     local-name: navigation
