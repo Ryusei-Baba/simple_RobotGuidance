@@ -30,45 +30,45 @@ from nav_msgs.msg import Odometry
 class simple_RobotGuidance_node:
     def __init__(self):
         rospy.init_node('simple_RobotGuidance_node', anonymous=True)
-        self.mode = rospy.get_param("/simple_RobotGuidance_node/mode", "use_dl_output")
-        self.action_num = 1
-        self.dl = deep_learning(n_action = self.action_num)
-        self.bridge = CvBridge()
-        self.image_sub = rospy.Subscriber("/camera/rgb/image_raw", Image, self.callback)
+        self.mode = rospy.get_param("/simple_RobotGuidance_node/mode", "use_dl_output") #ROSパラメータサーバから/simple_RobotGuidance_node/modeという名前のパラメータを取得
+        self.action_num = 1 #行動の数．適宜変更．
+        self.dl = deep_learning(n_action = self.action_num) #学習モデルの作成やトレーニングに関連
+        self.bridge = CvBridge()    #画像データをROSメッセージとOpenCV形式の画像データとの間で変換するために使用される CvBridge クラスのインスタンスを作成
+        self.image_sub = rospy.Subscriber("/camera/rgb/image_raw", Image, self.callback)    #ROSトピック /camera/rgb/image_raw から画像データを受け取るためのサブスクライバを設定
         # self.image_left_sub = rospy.Subscriber("/camera_left/rgb/image_raw", Image, self.callback_left_camera)
         # self.image_right_sub = rospy.Subscriber("/camera_right/rgb/image_raw", Image, self.callback_right_camera)
-        self.vel_sub = rospy.Subscriber("/cmd_vel", Twist, self.callback_vel)
-        self.action_pub = rospy.Publisher("action", Int8, queue_size=1)
-        self.nav_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
-        self.srv = rospy.Service('/training', SetBool, self.callback_dl_training)
-        self.mode_save_srv = rospy.Service('/model_save', Trigger, self.callback_model_save)
-        self.pose_sub = rospy.Subscriber("/amcl_pose", PoseWithCovarianceStamped, self.callback_pose)
-        self.path_sub = rospy.Subscriber("/move_base/NavfnROS/plan", Path, self.callback_path)
-        self.min_distance = 0.0
-        self.action = 0.0
-        self.episode = 0
-        self.vel = Twist()
-        self.path_pose = PoseArray()
-        self.cv_image = np.zeros((480,640,3), np.uint8)
+        self.vel_sub = rospy.Subscriber("/cmd_vel", Twist, self.callback_vel)   #/cmd_vel トピックから Twist メッセージを購読
+        self.action_pub = rospy.Publisher("action", Int8, queue_size=1) #ロボットの行動（アクション）に関連する情報を公開するために使用
+        self.nav_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)    #/cmd_vel' というトピックに Twist メッセージを公開するための別のパブリッシャを設定
+        self.srv = rospy.Service('/training', SetBool, self.callback_dl_training)   #学習の開始または停止などのトレーニングに関連する操作を実行するために使用
+        self.mode_save_srv = rospy.Service('/model_save', Trigger, self.callback_model_save)    #学習モデルの保存に関連する操作を実行するために使用
+        self.pose_sub = rospy.Subscriber("/amcl_pose", PoseWithCovarianceStamped, self.callback_pose)   #ロボットの現在の位置と姿勢情報を含む
+        self.path_sub = rospy.Subscriber("/move_base/NavfnROS/plan", Path, self.callback_path)  #ロボットの移動経路情報を含む
+        self.min_distance = 0.0 #ロボットと移動経路の最小距離を格納するために使用
+        self.action = 0.0   #ロボットの行動（アクション）を格納するために使用
+        self.episode = 0    #学習のエピソード数を格納するために使用します。学習プロセスが進行するにつれて、この変数は増加します
+        self.vel = Twist()  #速度情報が格納される
+        self.path_pose = PoseArray()    #移動経路情報が格納される
+        self.cv_image = np.zeros((480,640,3), np.uint8) #カメラから受信した画像データを格納するために使用
         # self.cv_left_image = np.zeros((480,640,3), np.uint8)
         # self.cv_right_image = np.zeros((480,640,3), np.uint8)
-        self.learning = True
-        self.select_dl = False
-        self.start_time = time.strftime("%Y%m%d_%H:%M:%S")
-        self.path = roslib.packages.get_pkg_dir('simple_RobotGuidance') + '/data/result_with_dir_'+str(self.mode)+'/'
-        self.save_path = roslib.packages.get_pkg_dir('simple_RobotGuidance') + '/data/model_with_dir_'+str(self.mode)+'/'
-        self.load_path = roslib.packages.get_pkg_dir('simple_RobotGuidance') + '/data/model_with_dir_'+str(self.mode)+'/20231026_21:18:49/model_gpu.pt'
-        self.previous_reset_time = 0
-        self.pos_x = 0.0
-        self.pos_y = 0.0
+        self.learning = True    #学習モードかテストモードかを示すフラグとして使用されます。True の場合、学習モードが有効
+        self.select_dl = False  #特定の条件下で深層学習モデルを選択するためのフラグとして使用
+        self.start_time = time.strftime("%Y%m%d_%H:%M:%S")  #一意のタイムスタンプとして使用され、データ保存などでフォルダやファイルの名前に組み込まれます
+        self.path = roslib.packages.get_pkg_dir('simple_RobotGuidance') + '/data/result_with_dir_'+str(self.mode)+'/'   #ファイルの保存パスを表す文字列
+        self.save_path = roslib.packages.get_pkg_dir('simple_RobotGuidance') + '/data/model_with_dir_'+str(self.mode)+'/'   #学習モデルの保存パスを表す文字列
+        self.load_path = roslib.packages.get_pkg_dir('simple_RobotGuidance') + '/data/model_with_dir_'+str(self.mode)+'/20231026_21:18:49/model_gpu.pt' #学習モデルの読み込みパスを表す文字列
+        self.previous_reset_time = 0    #以前のリセット時刻を表す整数
+        self.pos_x = 0.0    #self.pos_x, self.pos_y, self.pos_the は浮動小数点数で、それぞれロボットのX座標、Y座標、および姿勢（角度）を表現
+        self.pos_y = 0.0    #これらの変数は初期化され、ロボットの位置情報を格納するために使用
         self.pos_the = 0.0
-        self.is_started = True
-        self.start_time_s = rospy.get_time()
-        os.makedirs(self.path + self.start_time)
+        self.is_started = True  #ロボットの動作が開始されたかどうかを示すフラグとして使用
+        self.start_time_s = rospy.get_time()    #self.start_time_s はロボットの動作を開始した時刻を示す浮動小数点数の値です。rospy.get_time() 関数を使用して現在のROS時刻を取得し、この変数に格納しています。
+        os.makedirs(self.path + self.start_time)    #データや結果を保存するためのディレクトリを作成する操作
 
-        with open(self.path + self.start_time + '/' +  'training.csv', 'w') as f:
-            writer = csv.writer(f, lineterminator='\n')
-            writer.writerow(['step', 'mode', 'loss', 'angle_error(rad)', 'distance(m)','x(m)','y(m)', 'the(rad)', 'direction'])
+        with open(self.path + self.start_time + '/' +  'training.csv', 'w') as f:   #CSVファイルの作成とトピックの購読に関連
+            writer = csv.writer(f, lineterminator='\n') #csv.writer を使用してCSVファイルにデータを書き込むためのライターを作成
+            writer.writerow(['step', 'mode', 'loss', 'angle_error(rad)', 'distance(m)','x(m)','y(m)', 'the(rad)', 'direction']) #writer.writerow(...) を使用して、CSVファイルのヘッダ行を書き込みます
         self.tracker_sub = rospy.Subscriber("/tracker", Odometry, self.callback_tracker)
 
     def callback(self, data):   #画像データを取得
