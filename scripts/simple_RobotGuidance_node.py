@@ -34,7 +34,7 @@ class simple_RobotGuidance_node:
         self.action_num = 1
         self.dl = deep_learning(n_action = self.action_num)
         self.bridge = CvBridge()
-        self.image_sub = rospy.Subscriber("/camera/rgb/image_raw", Image, self.callback)
+        self.image_sub = rospy.Subscriber("/camera_center/usb_cam/image_raw", Image, self.callback)
         # self.image_left_sub = rospy.Subscriber("/camera_left/rgb/image_raw", Image, self.callback_left_camera)
         # self.image_right_sub = rospy.Subscriber("/camera_right/rgb/image_raw", Image, self.callback_right_camera)
         self.vel_sub = rospy.Subscriber("/cmd_vel", Twist, self.callback_vel)
@@ -165,7 +165,7 @@ class simple_RobotGuidance_node:
         #     self.episode += 1
         # return
  
-        if self.episode == 1500:
+        if self.episode == 2500:
             self.learning = False
             self.dl.save(self.save_path)
             #self.dl.load(self.load_path)
