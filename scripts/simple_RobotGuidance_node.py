@@ -89,19 +89,19 @@ class simple_RobotGuidance_node:
     #     except CvBridgeError as e:
     #         print(e)
 
-    def callback_tracker(self, data):
-        self.pos_x = data.pose.pose.position.x
+    def callback_tracker(self, data):   #/tracker トピックからオドメトリ情報を受け取り、ロボットの位置と姿勢情報を更新
+        self.pos_x = data.pose.pose.position.x  #受信したオドメトリ情報からロボットのX座標とY座標を抽出
         self.pos_y = data.pose.pose.position.y
-        rot = data.pose.pose.orientation
-        angle = tf.transformations.euler_from_quaternion((rot.x, rot.y, rot.z, rot.w))
-        self.pos_the = angle[2]
+        rot = data.pose.pose.orientation    #オドメトリ情報から姿勢情報を表す orientation フィールドを取得
+        angle = tf.transformations.euler_from_quaternion((rot.x, rot.y, rot.z, rot.w))  #Quaternion形式で表された姿勢情報をオイラー角に変換
+        self.pos_the = angle[2] #計算されたオイラー角からヨー角 (ロボットの向き) を抽出
 
-    def callback_path(self, data):
+    def callback_path(self, data):  #/move_base/NavfnROS/plan トピックからパス情報を受信し、self.path_pose 変数にその情報を格納
         self.path_pose = data
 
-    def callback_pose(self, data):
-        distance_list = []
-        pos = data.pose.pose.position
+    def callback_pose(self, data):  #/amcl_pose トピックからロボットの位置情報を受信し、その位置情報をもとにロボットがパスからどの程度離れているかを計算し、self.min_distance 変数にその最小距離を格納します。
+        distance_list = []  #空のリスト distance_list を作成し、後で各位置間の距離を格納するために使用
+        pos = data.pose.pose.position   #data メッセージからロボットの位置情報 (position) を取得
         for pose in self.path_pose.poses:
             path = pose.pose.position
             distance = np.sqrt(abs((pos.x - path.x)**2 + (pos.y - path.y)**2))
@@ -165,7 +165,7 @@ class simple_RobotGuidance_node:
         #     self.episode += 1
         # return
  
-        if self.episode == 2500:
+        if self.episode == 5000:
             self.learning = False
             self.dl.save(self.save_path)
             #self.dl.load(self.load_path)
