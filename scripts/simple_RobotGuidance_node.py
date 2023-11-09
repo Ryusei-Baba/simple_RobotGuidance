@@ -129,18 +129,18 @@ class simple_RobotGuidance_node:
         model_res.success = True                                                                                                # サービスの成功ステータスを設定
         return model_res                                                                                                        # サービスへの応答として SetBoolResponse インスタンスを返す
 
-    def loop(self):
+    def loop(self):                                                                                                             #メインのループ処理
         if self.cv_image.size != 640 * 480 * 3:
-            return
+            return                                                                                                              # 画像のサイズが期待されるサイズでない場合は処理を中断
         # if self.cv_left_image.size != 640 * 480 * 3:
         #     return
         # if self.cv_right_image.size != 640 * 480 * 3:
         #     return
         if self.vel.linear.x != 0:
-            self.is_started = True
+            self.is_started = True                                                                                              #ロボットが移動を開始している場合は、self.is_started フラグを True に設定
         if self.is_started == False:
-            return
-        img = resize(self.cv_image, (48, 64), mode='constant')
+            return                                                                                                              # ロボットがまだ開始されていない場合は、処理を中断
+        img = resize(self.cv_image, (48, 64), mode='constant')                                                                  # 画像を指定のサイズにリサイズ
         
         # r, g, b = cv2.split(img)
         # img = np.asanyarray([r,g,b])
@@ -152,7 +152,7 @@ class simple_RobotGuidance_node:
         # img_right = resize(self.cv_right_image, (48, 64), mode='constant')
         # #r, g, b = cv2.split(img_right)
         # #img_right = np.asanyarray([r,g,b])
-        ros_time = str(rospy.Time.now())
+        ros_time = str(rospy.Time.now())                                                                                        #ログやファイルの名前にタイムスタンプとして使用
 
         
         # if self.episode == 0:
