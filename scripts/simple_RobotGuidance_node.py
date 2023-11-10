@@ -166,13 +166,13 @@ class simple_RobotGuidance_node:
         # return
  
         if self.episode == 5000:
-            self.learning = False
-            self.dl.save(self.save_path)
-            #self.dl.load(self.load_path)
+            self.learning = False#トレーニングが停止
+            self.dl.save(self.save_path)#トレーニングが停止された後、学習済みモデルを保存
+            #self.dl.load(self.load_path)#指定された学習済みモデルを読み込む
 
         if self.episode == 10000:
-            os.system('killall roslaunch')
-            sys.exit()
+            os.system('killall roslaunch')#ROSのすべてのローンチプロセスが終了
+            sys.exit()#プログラムを終了
 
         if self.learning:
             target_action = self.action
