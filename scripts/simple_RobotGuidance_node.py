@@ -166,32 +166,32 @@ class simple_RobotGuidance_node:
         # return
  
         if self.episode == 5000:
-            self.learning = False#トレーニングが停止
-            self.dl.save(self.save_path)#トレーニングが停止された後、学習済みモデルを保存
-            #self.dl.load(self.load_path)#指定された学習済みモデルを読み込む
+            self.learning = False                                                                                               #トレーニングが停止
+            self.dl.save(self.save_path)                                                                                        #トレーニングが停止された後、学習済みモデルを保存
+            #self.dl.load(self.load_path)                                                                                       #指定された学習済みモデルを読み込む
 
         if self.episode == 10000:
-            os.system('killall roslaunch')#ROSのすべてのローンチプロセスが終了
-            sys.exit()#プログラムを終了
+            os.system('killall roslaunch')                                                                                      #ROSのすべてのローンチプロセスが終了
+            sys.exit()                                                                                                          #プログラムを終了
 
         if self.learning:
-            target_action = self.action
-            distance = self.min_distance
+            target_action = self.action                                                                                         #self.action はロボットのアクションを表す値
+            distance = self.min_distance                                                                                        #self.min_distance はロボットの現在の位置と予定された経路の最短距離を表す値
 
-            if self.mode == "manual":
+            if self.mode == "manual":                                                                                           #マニュアル
                 if distance > 0.1:
                     self.select_dl = False
                 elif distance < 0.05:
                     self.select_dl = True
                 if self.select_dl and self.episode >= 0:
                     target_action = 0
-                action, loss = self.dl.act_and_trains(img , target_action)
+                action, loss = self.dl.act_and_trains(img , target_action)                                                      #self.dl.act_and_trains メソッドを呼び出して、画像と目標アクションに基づいてアクションを取得し、トレーニングを行います。取得したアクションと損失はそれぞれ action と loss に代入
                 # if abs(target_action) < 0.1:
                 #     action_left,  loss_left  = self.dl.act_and_trains(img_left , target_action - 0.2)
                 #     action_right, loss_right = self.dl.act_and_trains(img_right , target_action + 0.2)
-                angle_error = abs(action - target_action)
+                angle_error = abs(action - target_action)                                                                       #取得したアクションと目標アクションの差の絶対値を計算
 
-            elif self.mode == "zigzag":
+            elif self.mode == "zigzag":                                                                                         #ジグザグ
                 action, loss = self.dl.act_and_trains(img , target_action)
                 # if abs(target_action) < 0.1:
                 #     action_left,  loss_left  = self.dl.act_and_trains(img_left , target_action - 0.2)
@@ -204,7 +204,7 @@ class simple_RobotGuidance_node:
                 if self.select_dl and self.episode >= 0:
                     target_action = 0
 
-            elif self.mode == "use_dl_output":
+            elif self.mode == "use_dl_output":                                                                                  #学習器の出力を使用
                 action, loss = self.dl.act_and_trains(img , target_action)
                 # if abs(target_action) < 0.1:
                 #     action_left,  loss_left  = self.dl.act_and_trains(img_left , target_action - 0.2)
@@ -217,7 +217,7 @@ class simple_RobotGuidance_node:
                 if self.select_dl and self.episode >= 0:
                     target_action = action
 
-            elif self.mode == "follow_line":
+            elif self.mode == "follow_line":                                                                                    #経路に従う
                 action, loss = self.dl.act_and_trains(img , target_action)
                 # if abs(target_action) < 0.1:
                 #     action_left,  loss_left  = self.dl.act_and_trains(img_left , target_action - 0.2)
@@ -225,10 +225,10 @@ class simple_RobotGuidance_node:
                 angle_error = abs(action - target_action)
 
             elif self.mode == "selected_training":
-                action = self.dl.act(img )
+                action = self.dl.act(img)                                                                                       #画像からアクションを取得
                 angle_error = abs(action - target_action)
-                loss = 0
-                if angle_error > 0.05:
+                loss = 0                                                                                                        #初期化ステップ
+                if angle_error > 0.05:                                                                                          #angle_error が0.05より大きい場合に、新しいアクションと損失を取得
                     action, loss = self.dl.act_and_trains(img , target_action)
                     # if abs(target_action) < 0.1:
                     #     action_left,  loss_left  = self.dl.act_and_trains(img_left , target_action - 0.2)
@@ -245,23 +245,23 @@ class simple_RobotGuidance_node:
 
             # end mode
 
-            print(str(self.episode) + ", training, loss: " + str(loss) + ", angle_error: " + str(angle_error) + ", distance: " + str(distance))
-            self.episode += 1
-            line = [str(self.episode), "training", str(loss), str(angle_error), str(distance), str(self.pos_x), str(self.pos_y), str(self.pos_the)  ]
-            with open(self.path + self.start_time + '/' + 'training.csv', 'a') as f:
-                writer = csv.writer(f, lineterminator='\n')
-                writer.writerow(line)
-            self.vel.linear.x = 0.2
-            self.vel.angular.z = target_action
-            self.nav_pub.publish(self.vel)
+            print(str(self.episode) + ", training, loss: " + str(loss) + ", angle_error: " + str(angle_error) + ", distance: " + str(distance)) #各エピソードごとに、エピソード番号、トレーニング中であること、損失、角度誤差、距離などの情報を表示
+            self.episode += 1                                                                                                   # エピソード番号を1増やします
+            line = [str(self.episode), "training", str(loss), str(angle_error), str(distance), str(self.pos_x), str(self.pos_y), str(self.pos_the)  ]   #エピソードごとの情報をリストとして作成
+            with open(self.path + self.start_time + '/' + 'training.csv', 'a') as f:                                            # CSVファイルを開いて、ファイルへのアクセスを確立します。'a'モードはファイルが存在しない場合は新しく作成し、既存のファイルがある場合は末尾に追加
+                writer = csv.writer(f, lineterminator='\n')                                                                     #CSVファイルに書き込むためのcsv.writerオブジェクトを作成します。lineterminator='\n'は行の終わりを改行文字に設定
+                writer.writerow(line)                                                                                           #リスト line をCSVファイルに書き込みます
+            self.vel.linear.x = 0.2                                                                                             #ロボットの直進速度を0.2に設定
+            self.vel.angular.z = target_action                                                                                  #ロボットの角速度を計算された目標アクションに設定
+            self.nav_pub.publish(self.vel)                                                                                      #設定した速度指令を /cmd_vel トピックに発行して、ロボットに速度指令 処理が1サイクル終了した後、指定した周期になるまでスリープします。これにより、処理が一定の周期で実行を送信します。これにより、ロボットが移動
 
-        else:
-            target_action = self.dl.act(img)
-            distance = self.min_distance
-            print(str(self.episode) + ", test, angular:" + str(target_action) + ", distance: " + str(distance))
+        else:                                                                                                                   #学習が終了した後、テストモードでネットワークが生成したアクションを使用してロボットを制御するための処理
+            target_action = self.dl.act(img)                                                                                    #テスト用に画像からアクションを取得
+            distance = self.min_distance                                                                                        #ロボットの位置情報から最小距離を取得
+            print(str(self.episode) + ", test, angular:" + str(target_action) + ", distance: " + str(distance))                 #テストの結果を表示します。エピソード番号、テストであること、取得したアクション、最小距離などの情報が表示
 
-            self.episode += 1
-            angle_error = abs(self.action - target_action)
+            self.episode += 1                                                                                                   #エピソード番号を1増やします
+            angle_error = abs(self.action - target_action)                                                                      #取得したアクションと目標アクションの差の絶対値を計算
             line = [str(self.episode), "test", "0", str(angle_error), str(distance), str(self.pos_x), str(self.pos_y), str(self.pos_the)  ]
             with open(self.path + self.start_time + '/' + 'training.csv', 'a') as f:
                 writer = csv.writer(f, lineterminator='\n')
@@ -270,18 +270,18 @@ class simple_RobotGuidance_node:
             self.vel.angular.z = target_action
             self.nav_pub.publish(self.vel)
 
-        temp = copy.deepcopy(img)
-        cv2.imshow("Resized Image", temp)
+        temp = copy.deepcopy(img)                                                                                               #img をディープコピーして temp に代入します。ディープコピーを行うことで、オリジナルの画像データが変更されないようにします
+        cv2.imshow("Resized Image", temp)                                                                                       #ウィンドウにリサイズされた画像を表示します。ウィンドウのタイトルは "Resized Image" 
         # temp = copy.deepcopy(img_left)
         # cv2.imshow("Resized Left Image", temp)
         # temp = copy.deepcopy(img_right)
         # cv2.imshow("Resized Right Image", temp)
-        cv2.waitKey(1)
+        cv2.waitKey(1)                                                                                                          #キーボードからの入力を待ちます。引数の1は、1ミリ秒ごとにキー入力を確認することを示しています。これにより、ウィンドウが開かれたままになります
 
-if __name__ == '__main__':
-    rg = simple_RobotGuidance_node()
-    DURATION = 0.2
-    r = rospy.Rate(1 / DURATION)
+if __name__ == '__main__':                                                                                                      #処理が1サイクル終了した後、指定した周期になるまでスリープします。これにより、処理が一定の周期で実行
+    rg = simple_RobotGuidance_node()                                                                                            #ROSノードが初期化
+    DURATION = 0.2                                                                                                              #処理の周期を設定します。ここでは0.2秒ごとに処理が実行されるように設定
+    r = rospy.Rate(1 / DURATION)                                                                                                #処理の周期を設定したrospy.Rateオブジェクト r を作成
     while not rospy.is_shutdown():
         rg.loop()
-        r.sleep()
+        r.sleep()                                                                                                               #処理が1サイクル終了した後、指定した周期になるまでスリープします。これにより、処理が一定の周期で実行
