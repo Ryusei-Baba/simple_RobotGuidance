@@ -67,9 +67,11 @@ class simple_RobotGuidance_node:
         os.makedirs(self.path + self.start_time)                                                                    
 
         with open(self.path + self.start_time + '/' +  'training.csv', 'w') as f:                                             
-            writer = csv.writer(f, lineterminator='\n')                                                              
-            writer.writerow(['step', 'mode', 'loss', 'angle_error(rad)', 'distance(m)','x(m)','y(m)', 'the(rad)', 'direction']) 
-        self.tracker_sub = rospy.Subscriber("/tracker", Odometry, self.callback_tracker)
+            writer = csv.writer(f, lineterminator='\n')
+            writer.writerow(['step', 'mode', 'loss', 'angle_error(rad)', 'the(rad/s)'])                                                               
+            # writer.writerow(['step', 'mode', 'loss', 'angle_error(rad)', 'distance(m)','x(m)','y(m)', 'the(rad)', 'direction']) 
+        self.tracker_sub = rospy.Subscriber("/cmd_vel", Twist, self.callback_vel)
+        # self.tracker_sub = rospy.Subscriber("/tracker", Odometry, self.callback_tracker)
 
     def callback(self, data):                                                                                   
         try:
