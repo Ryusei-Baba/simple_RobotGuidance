@@ -68,10 +68,8 @@ class simple_RobotGuidance_node:
 
         with open(self.path + self.start_time + '/' +  'training.csv', 'w') as f:                                             
             writer = csv.writer(f, lineterminator='\n')
-            writer.writerow(['step', 'mode', 'loss', 'angle_error(rad)', 'the(rad/s)'])                                                               
-            # writer.writerow(['step', 'mode', 'loss', 'angle_error(rad)', 'distance(m)','x(m)','y(m)', 'the(rad)', 'direction']) 
-        self.tracker_sub = rospy.Subscriber("/cmd_vel", Twist, self.callback_vel)
-        # self.tracker_sub = rospy.Subscriber("/tracker", Odometry, self.callback_tracker)
+            writer.writerow(['step', 'mode', 'loss', 'angle_error(rad)','angular_velocity(rad/s)', 'distance(m)','x(m)','y(m)', 'the(rad)', 'direction']) 
+        self.tracker_sub = rospy.Subscriber("/tracker", Odometry, self.callback_tracker)
 
     def callback(self, data):                                                                                   
         try:
@@ -248,7 +246,7 @@ class simple_RobotGuidance_node:
 
             print(str(self.episode) + ", training, loss: " + str(loss) + ", angle_error: " + str(angle_error) + ", distance: " + str(distance)) 
             self.episode += 1                                                                                                 
-            line = [str(self.episode), "training", str(loss), str(angle_error), str(distance), str(self.pos_x), str(self.pos_y), str(self.pos_the)  ]  
+            line = [str(self.episode), "training", str(loss), str(angle_error), str(self.vel.angular.z), str(distance), str(self.pos_x), str(self.pos_y), str(self.pos_the)]  
             with open(self.path + self.start_time + '/' + 'training.csv', 'a') as f:                               
                 writer = csv.writer(f, lineterminator='\n')                                                          
                 writer.writerow(line)                                                                                       
@@ -263,7 +261,7 @@ class simple_RobotGuidance_node:
 
             self.episode += 1                                                                                             
             angle_error = abs(self.action - target_action)                                                              
-            line = [str(self.episode), "test", "0", str(angle_error), str(distance), str(self.pos_x), str(self.pos_y), str(self.pos_the)  ]
+            line = [str(self.episode), "test", "0", str(angle_error), str(self.vel.angular.z), str(distance), str(self.pos_x), str(self.pos_y), str(self.pos_the)]
             with open(self.path + self.start_time + '/' + 'training.csv', 'a') as f:
                 writer = csv.writer(f, lineterminator='\n')
                 writer.writerow(line)
