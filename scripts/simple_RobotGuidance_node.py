@@ -163,7 +163,6 @@ class simple_RobotGuidance_node:
         #     self.vel.angular.z = 0.0
         #     self.nav_pub.publish(self.vel)            
         #     self.episode += 1
-        # return
  
         if self.episode == 5000:
             self.learning = False                                                                   
