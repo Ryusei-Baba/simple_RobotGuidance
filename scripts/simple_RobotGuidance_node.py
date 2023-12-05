@@ -62,6 +62,8 @@ class simple_RobotGuidance_node:
         self.pos_x = 0.0                                                                                                  
         self.pos_y = 0.0                                                                                      
         self.pos_the = 0.0
+        self.vel.linear.x = 0.0
+        self.vel.angular.z = 0.0        
         self.is_started = True                                                                                           
         self.start_time_s = rospy.get_time()                                                                           
         os.makedirs(self.path + self.start_time)                                                                    
@@ -159,8 +161,6 @@ class simple_RobotGuidance_node:
         #     self.learning = False
         #     self.dl.load(self.load_path)
         #     # self.dl.save(self.save_path)
-        #     self.vel.linear.x = 0.0
-        #     self.vel.angular.z = 0.0
         #     self.nav_pub.publish(self.vel)            
         #     self.episode += 1
  
