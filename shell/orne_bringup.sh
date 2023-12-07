@@ -1,1 +1,0 @@
-roslaunch orne_box_bringup orne_box_simple_RobotGuidance.launch
