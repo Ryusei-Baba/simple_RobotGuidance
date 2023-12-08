@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<launch>
+    <arg name="script" default="intensities_follow_node.py"/>
+    <node pkg="simple_RobotGuidance" type="$(arg script)" name="intensities_follow_node" output="screen"/>
+
+    <node pkg="rviz" type="rviz" name="rviz" args="-d $(find simple_RobotGuidance)/rviz/simple_RobotGuidance.rviz"/>
+</launch>

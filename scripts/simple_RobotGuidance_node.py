@@ -167,7 +167,7 @@ class simple_RobotGuidance_node:
         if self.episode == 10000:
             self.learning = False                                                                   
             self.dl.save(self.save_path)                                                                              
-            #self.dl.load(self.load_path)                                                                            
+            os.system('rosnode kill intensities_follow_node')
 
         if self.episode == 12500:
             os.system('killall roslaunch')                                                                        
