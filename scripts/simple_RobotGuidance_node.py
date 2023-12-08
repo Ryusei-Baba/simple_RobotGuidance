@@ -30,7 +30,7 @@ from nav_msgs.msg import Odometry
 class simple_RobotGuidance_node:
     def __init__(self):
         rospy.init_node('simple_RobotGuidance_node', anonymous=True)
-        self.mode = rospy.get_param("/simple_RobotGuidance_node/mode", "use_dl_output")   
+        self.mode = rospy.get_param("/simple_RobotGuidance_node/mode", "follow_line")   
         self.action_num = 1                                                                                                     
         self.dl = deep_learning(n_action = self.action_num)                                                                     
         self.bridge = CvBridge()                                                                                                
@@ -44,6 +44,7 @@ class simple_RobotGuidance_node:
         self.mode_save_srv = rospy.Service('/model_save', Trigger, self.callback_model_save)                                   
         self.pose_sub = rospy.Subscriber("/amcl_pose", PoseWithCovarianceStamped, self.callback_pose)                           
         self.path_sub = rospy.Subscriber("/move_base/NavfnROS/plan", Path, self.callback_path)                           
+        self.tracker_sub = rospy.Subscriber("/tracker", Odometry, self.callback_tracker)
         self.min_distance = 0.0                                                                                    
         self.action = 0.0                                                                                            
         self.episode = 0                                                                                                 
@@ -57,7 +58,7 @@ class simple_RobotGuidance_node:
         self.start_time = time.strftime("%Y%m%d_%H:%M:%S")                                                                 
         self.path = roslib.packages.get_pkg_dir('simple_RobotGuidance') + '/data/result_with_dir_'+str(self.mode)+'/'          
         self.save_path = roslib.packages.get_pkg_dir('simple_RobotGuidance') + '/data/model_with_dir_'+str(self.mode)+'/'   
-        self.load_path = roslib.packages.get_pkg_dir('simple_RobotGuidance') + '/data/model_with_dir_'+str(self.mode)+'/20231026_21:18:49/model_gpu.pt' 
+        self.load_path = roslib.packages.get_pkg_dir('simple_RobotGuidance') + '/data/model_with_dir_'+str(self.mode)+'/20231207_21:34:51/model_gpu.pt' 
         self.previous_reset_time = 0                                                                                     
         self.pos_x = 0.0                                                                                                  
         self.pos_y = 0.0                                                                                      
@@ -71,7 +72,6 @@ class simple_RobotGuidance_node:
         with open(self.path + self.start_time + '/' +  'training.csv', 'w') as f:                                             
             writer = csv.writer(f, lineterminator='\n')
             writer.writerow(['step', 'mode', 'loss', 'angle_error(rad)','angular_velocity(rad/s)', 'distance(m)','x(m)','y(m)', 'the(rad)', 'direction']) 
-        self.tracker_sub = rospy.Subscriber("/tracker", Odometry, self.callback_tracker)
 
     def callback(self, data):                                                                                   
         try:
@@ -164,12 +164,12 @@ class simple_RobotGuidance_node:
         #     self.nav_pub.publish(self.vel)            
         #     self.episode += 1
  
-        if self.episode == 5000:
+        if self.episode == 10000:
             self.learning = False                                                                   
             self.dl.save(self.save_path)                                                                              
             #self.dl.load(self.load_path)                                                                            
 
-        if self.episode == 10000:
+        if self.episode == 12500:
             os.system('killall roslaunch')                                                                        
             sys.exit()                                                                               
 
@@ -244,7 +244,8 @@ class simple_RobotGuidance_node:
 
             # end mode
 
-            print(str(self.episode) + ", training, loss: " + str(loss) + ", angle_error: " + str(angle_error) + ", distance: " + str(distance)) 
+            # print(str(self.episode) + ", training, loss: " + str(loss) + ", angle_error: " + str(angle_error) + ", distance: " + str(distance)) 
+            print(str(self.episode) + ", training, angular:" + str(self.vel.angular.z)) 
             self.episode += 1                                                                                                 
             line = [str(self.episode), "training", str(loss), str(angle_error), str(self.vel.angular.z), str(distance), str(self.pos_x), str(self.pos_y), str(self.pos_the)]  
             with open(self.path + self.start_time + '/' + 'training.csv', 'a') as f:                               
@@ -257,7 +258,8 @@ class simple_RobotGuidance_node:
         else:                                                                                                                 
             target_action = self.dl.act(img)                                                                                  
             distance = self.min_distance                                                                                     
-            print(str(self.episode) + ", test, angular:" + str(target_action) + ", distance: " + str(distance))           
+            # print(str(self.episode) + ", test, angular:" + str(target_action) + ", distance: " + str(distance))           
+            print(str(self.episode) + ", test, angular:" + str(self.vel.angular.z))           
 
             self.episode += 1                                                                                             
             angle_error = abs(self.action - target_action)                                                              
