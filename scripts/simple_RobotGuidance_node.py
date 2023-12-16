@@ -164,7 +164,7 @@ class simple_RobotGuidance_node:
         #     self.nav_pub.publish(self.vel)            
         #     self.episode += 1
  
-        if self.episode == 10000:
+        if self.episode == 3000:
             self.learning = False                                                                   
             self.dl.save(self.save_path)                                                                              
             os.system('rosnode kill intensities_follow_node')
@@ -259,7 +259,7 @@ class simple_RobotGuidance_node:
             target_action = self.dl.act(img)                                                                                  
             distance = self.min_distance                                                                                     
             # print(str(self.episode) + ", test, angular:" + str(target_action) + ", distance: " + str(distance))           
-            print(str(self.episode) + ", test, angular:" + str(self.vel.angular.z))           
+            print(str(self.episode) + ", test, ")           
 
             self.episode += 1                                                                                             
             angle_error = abs(self.action - target_action)                                                              

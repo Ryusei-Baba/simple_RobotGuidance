@@ -64,8 +64,8 @@ class FollowReflector:
         # 最後にπを掛け、角度に変換
         # 3.141592653589793を引くことで、範囲を-πからπに変換
 
-        # 角速度を範囲[-1, 1]に正規化
-        normalized_angular_velocity = max_intensity_angle / 3.141592653589793  # Normalize to [-1, 1]
+        # 角速度を範囲[-0.5, 0.5]に正規化
+        normalized_angular_velocity = max_intensity_angle / 3.141592653589793 * 0.5
         return normalized_angular_velocity
 
 if __name__ == '__main__':
