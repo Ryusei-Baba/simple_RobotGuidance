@@ -31,7 +31,10 @@ class IntensitiesData:
         # CSVファイルに書き込むためのファイルオブジェクトを作成
         self.csv_file = open(self.csv_file_path, 'a')
         self.csv_writer = csv.writer(self.csv_file, lineterminator='\n')
-        self.csv_writer.writerow(['Timestamp', 'intensities'])
+
+        # ヘッダーにタイムスタンプと各反射強度のラベルを追加
+        header = ['Timestamp'] + [f'Intensity_{i}' for i in range(1, len(LaserScan().intensities) + 1)]
+        self.csv_writer.writerow(header)
 
         rospy.Subscriber('/scan', LaserScan, self.laser_callback)
 
@@ -39,14 +42,16 @@ class IntensitiesData:
         timestamp = rospy.get_time()
         intensities = data.intensities
 
-        # CSVファイルにデータを書き込む
-        self.csv_writer.writerow([rospy.get_time(), intensities])
+        # intensitiesを一列にして数字のみで保存
+        row_data = [rospy.get_time()] + list(intensities)
+        self.csv_writer.writerow(row_data)
 
         # intensitiesを取得した回数を更新
         self.intensities_count += 1
 
         # intensitiesを取得した回数を出力
         rospy.loginfo(f"count: {self.intensities_count}, value: {intensities}")
+
 
 if __name__ == '__main__':
     try:
